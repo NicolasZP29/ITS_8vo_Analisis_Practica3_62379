@@ -4,10 +4,48 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../../icons";
 import Label from "../form/Label";
 import Checkbox from "../form/input/Checkbox";
 import Input from "../form/input/InputField";
+import React from "react";
+import { useForm } from "react-hook-form";
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import Button from "../ui/button/Button";
+import { AuthServiceImpl } from "../../../infrastructure/services/AuthServiceImpl";
+import { RegisterUseCase } from "../../../core/useCases/RegisterUseCase";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const form = useForm({
+    defaultValues: {
+      fname: "",
+      lname: "",
+      email: "",
+      password: "",
+    },
+    resolver: yupResolver(
+      yup.object().shape({
+        fname: yup.string().required("First name is required"),
+        lname: yup.string().required("Last name is required"),
+        email: yup.string().email().required("Email is required"),
+        password: yup.string().min(6).required("Password is required"),
+      })
+    )
+  });
+
+  const handleSubmit = async (data: any) => {
+    const fullName = `${data.fname} ${data.lname}`;
+    const authService = new AuthServiceImpl();
+    const registerUseCase = new RegisterUseCase(authService);
+
+    const success = await registerUseCase.execute(fullName, data.email, data.password);
+    if (success) {
+      alert("Registro exitoso. Ahora inicia sesión.");
+      window.location.href = "/signin";
+    } else {
+      alert("Error al registrarse. Verifica tus datos.");
+    }
+  };
+
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
@@ -95,6 +133,8 @@ export default function SignUpForm() {
                       id="fname"
                       name="fname"
                       placeholder="Enter your first name"
+                      error={!!form.formState.errors.fname}
+                      onChange={(e) => form.setValue('fname', e.target.value)}
                     />
                   </div>
                   {/* <!-- Last Name --> */}
@@ -107,6 +147,8 @@ export default function SignUpForm() {
                       id="lname"
                       name="lname"
                       placeholder="Enter your last name"
+                      error={!!form.formState.errors.lname}
+                      onChange={(e) => form.setValue('lname', e.target.value)}
                     />
                   </div>
                 </div>
@@ -120,6 +162,8 @@ export default function SignUpForm() {
                     id="email"
                     name="email"
                     placeholder="Enter your email"
+                    error={!!form.formState.errors.email}
+                    onChange={(e) => form.setValue('email', e.target.value)}
                   />
                 </div>
                 {/* <!-- Password --> */}
@@ -128,9 +172,11 @@ export default function SignUpForm() {
                     Password<span className="text-error-500">*</span>
                   </Label>
                   <div className="relative">
-                    <Input
+                  <Input
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
+                      error={!!form.formState.errors.password}
+                      onChange={(e) => form.setValue('password', e.target.value)}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -164,7 +210,11 @@ export default function SignUpForm() {
                 </div>
                 {/* <!-- Button --> */}
                 <div>
-                  <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
+                <button
+                    type="button"
+                    onClick={form.handleSubmit(handleSubmit)}
+                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
+                  >
                     Sign Up
                   </button>
                 </div>

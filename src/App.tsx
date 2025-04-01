@@ -4,6 +4,7 @@ import AppLayout from "./ui/layout/AppLayout";
 import SignIn from "./ui/pages/AuthPages/SignIn";
 import SignUp from "./ui/pages/AuthPages/SignUp";
 import Home from "./ui/pages/Dashboard/Home";
+import PrivateRoute from "./ui//hooks/PrivateRoute";
 
 export default function App() {
   return (
@@ -13,7 +14,15 @@ export default function App() {
         <Routes>
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
+            <Route
+              index
+              path="/"
+              element={
+                <PrivateRoute>
+                  <Home />
+                </PrivateRoute>
+              }
+            />
           </Route>
 
           {/* Auth Layout */}
@@ -24,3 +33,4 @@ export default function App() {
     </>
   );
 }
+
